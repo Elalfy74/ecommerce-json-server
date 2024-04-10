@@ -1,4 +1,13 @@
 {
+  "users": [
+    {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "avatar": "https://semantic-ui.com/images/avatar2/large/matthew.png"
+    }
+  ],
   "categories": [
     "smartphones",
     "laptops",

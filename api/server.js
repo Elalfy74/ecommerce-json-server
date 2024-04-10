@@ -1,4 +1,8 @@
-// See https://github.com/typicode/json-server#module
+const dotenv = require('dotenv');
+dotenv.config();
+
+const jwt = require('./jwt');
+
 const jsonServer = require('json-server');
 
 const server = jsonServer.create();
@@ -17,6 +21,30 @@ const router = jsonServer.router(db);
 const middlewares = jsonServer.defaults();
 
 server.use(middlewares);
+
+server.use(jsonServer.bodyParser);
+server.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // No need to hash it's just for testing
+  const user = db.users.find((user) => user.email === email && user.password === password);
+
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
+
+  const accessToken = jwt.generateToken({ id: user.id, email: user.email });
+
+  return res.jsonp({
+    accessToken,
+    user: {
+      name: user.firstName + ' ' + user.lastName,
+      email: user.email,
+      avatar: user.avatar,
+    },
+  });
+});
+
 // Add this before server.use(router)
 server.use(
   jsonServer.rewriter({
@@ -24,6 +52,14 @@ server.use(
     '/blog/:resource/:id/show': '/:resource/:id',
   })
 );
+
+server.use((req, res, next) => {
+  if (jwt.isAuthenticated(req)) {
+    next();
+  } else {
+    res.status(401).send({ message: 'Unauthorized' });
+  }
+});
 server.use(router);
 server.listen(3000, () => {
   console.log('JSON Server is running on port 3000');
